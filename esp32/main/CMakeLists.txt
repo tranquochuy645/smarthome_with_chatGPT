@@ -1,0 +1,14 @@
+idf_component_register(
+SRCS 
+"global_variables.c" 
+"utils.c" 
+"controllable_event_handler.c" 
+"mode_working.c" 
+"mode_smartconfig.c" 
+"app_init.c" 
+"main.c" 
+"ledc.c" 
+"dht11.c" 
+INCLUDE_DIRS 
+"." 
+)

@@ -1,0 +1,28 @@
+[
+  {
+    "name": "set_device_data",
+    "description": "Set user's devices data, the devices will automatically sync with new data value. You can control user's devices by calling this function. You can only control the field that is named 'controllable'. You cannot control sensors.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "room_id": {
+          "type": "string",
+          "description": "The room's id, it must match the key of the room that has the device"
+        },
+        "device_id": {
+          "type": "string",
+          "description": "The device's id, it must match the key of the device"
+        },
+        "new_data": {
+          "type": "string",
+          "description": "This is the modification payload that contains one or many key-value pairs in the device's controllable field. Each key in the payload must match the original key, with only the corresponding value being modified. Represent the payload as a single string using URL query style, and no capitalized letters, as illustrated in the following example: '?rgb_led_hex_color=0xff0000'"
+        }
+      },
+      "required": [
+        "room_id",
+        "device_id",
+        "new_data"
+      ]
+    }
+  }
+]

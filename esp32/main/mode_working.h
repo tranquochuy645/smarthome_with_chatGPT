@@ -1,0 +1,1 @@
+void init_working_mode();

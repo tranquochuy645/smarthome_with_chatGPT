@@ -1,0 +1,25 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "idf.port": "/dev/ttyUSB0",
+  "idf.flashType": "UART",
+  "idf.adapterTargetName": "esp32",
+  "files.associations": {
+    "cstring": "c",
+    "stdint.h": "c",
+    "nvs.h": "c",
+    "freertos.h": "c",
+    "task.h": "c",
+    "event_groups.h": "c",
+    "esp_netif.h": "c",
+    "global_variables.h": "c",
+    "esp_smartconfig.h": "c",
+    "mode_smartconfig.h": "c",
+    "esp_log.h": "c",
+    "project_config.h": "c",
+    "ledc.h": "c",
+    "app_init.h": "c",
+    "gpio.h": "c",
+    "nvs_flash.h": "c"
+  },
+  "C_Cpp.errorSquiggles": "enabled"
+}
