@@ -7,6 +7,7 @@
 
 #define TAG "Utils"
 
+
 static void clear_nvs_and_reset_task()
 {
 

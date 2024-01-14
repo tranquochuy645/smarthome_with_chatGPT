@@ -43,6 +43,10 @@ static bool introduce_new_device()
         esp_http_client_cleanup(client);
         return false;
     }
+    if(esp_http_client_get_status_code(client)!=200){
+         esp_http_client_cleanup(client);
+        return false;
+    }
 
     len = esp_http_client_read_response(client, buffer, 64);
 
@@ -85,15 +89,6 @@ static void smartconfig_task(void *parm)
         if (uxBits & CONNECTED_BIT)
         {
             ESP_LOGI(TAG_INIT, "WiFi Connected to ap");
-        }
-        if (uxBits & ESPTOUCH_DONE_BIT)
-        {
-            // This will happen AFTER CONNECTED_BIT is set
-            // smartconfig module sends the ip and stuff (ACK_DONE) to the phone to anounce it connected to wifi successfully
-            // then the wifi event handler will fire this block on SC_EVENT_SEND_ACK_DONE
-            ESP_LOGI(TAG_INIT, "smartconfig over");
-            esp_smartconfig_stop();
-            vTaskDelay(500);
             if (introduce_new_device() && write_nvs())
             {
                 ESP_LOGI(TAG_INIT, "init ok, restarting");
@@ -104,6 +99,13 @@ static void smartconfig_task(void *parm)
                 ESP_LOGI(TAG_INIT, "init failed, delete everything");
                 interrupt_hard_reset();
             }
+        }
+        if (uxBits & ESPTOUCH_DONE_BIT)
+        {
+            // smartconfig module sends the ip and stuff (ACK_DONE) to the phone to anounce it connected to wifi successfully
+            // then the wifi event handler will fire this block on SC_EVENT_SEND_ACK_DONE
+            ESP_LOGI(TAG_INIT, "smartconfig over");
+            esp_smartconfig_stop();
         }
     }
 }
@@ -117,8 +119,17 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
+        wifi_event_sta_disconnected_t *event = (wifi_event_sta_disconnected_t *)event_data;
         xEventGroupClearBits(event_group_handle, CONNECTED_BIT);
-        esp_wifi_connect();
+        if (WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT == event->reason || WIFI_REASON_AUTH_FAIL == event->reason)
+        {
+            // wrong wifi credentials
+            interrupt_hard_reset();
+        }
+        else
+        {
+            esp_wifi_connect();
+        }
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
@@ -170,7 +181,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
 
         ESP_ERROR_CHECK(esp_wifi_disconnect());
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-        ESP_ERROR_CHECK(esp_wifi_connect());
+        esp_wifi_connect();
     }
     else if (event_base == SC_EVENT && event_id == SC_EVENT_SEND_ACK_DONE)
     {

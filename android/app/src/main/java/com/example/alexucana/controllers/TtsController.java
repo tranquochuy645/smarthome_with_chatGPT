@@ -1,11 +1,10 @@
 /**
  * TtsController: Singleton class for managing Text-to-Speech (TTS) functionality.
- *
+ * <p>
  * This class serves as a singleton for handling Text-to-Speech functionality in the application.
  * It provides methods to initialize the TextToSpeech engine, check if a TTS engine is installed,
  * and create a new instance of the TextToSpeech engine. The class also includes a callback method
  * for initializing the TTS engine and redirects the user to configure or install a TTS engine if needed.
- *
  */
 package com.example.alexucana.controllers;
 
@@ -15,6 +14,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 
 import com.example.alexucana.config;
 
@@ -34,6 +34,8 @@ public class TtsController {
     // Context of the application
     private final Context context;
 
+    private String queue="";
+
     /**
      * Constructor for the TtsController class.
      *
@@ -41,7 +43,6 @@ public class TtsController {
      */
     public TtsController(Context ctx) {
         context = ctx;
-        createEngine(); // Initialize the TextToSpeech engine
     }
 
     /**
@@ -53,6 +54,12 @@ public class TtsController {
         // Check if the TextToSpeech initialization is successful
         if (status == TextToSpeech.SUCCESS) {
             this.engine.setLanguage(DEFAULT_LANG); // Set the language for Text-to-Speech
+            if(queue.isEmpty()) return;
+            Log.i("cc",queue);
+            // In case initialization is done AFTER the receiving the full ChatGPT answer
+            // Then the local queue might still holding something, so invoke the speak method to spit it out
+            speak("");
+            queue =""; // for safety
         } else if (isTTSEngineInstalled()) {
             try {
                 // Opening up the system settings for Text-to-Speech configuration
@@ -90,16 +97,32 @@ public class TtsController {
     /**
      * Create a new instance of the TextToSpeech engine.
      */
-    private void createEngine() {
+    public void createEngine() {
+        if (engine != null) {
+            queue="";
+            engine.shutdown();
+        }
         engine = new TextToSpeech(context, this::initCallback);
     }
 
     /**
-     * Get the instance of the TextToSpeech engine.
-     *
-     * @return The TextToSpeech engine instance.
+     * Add to speak queue
+     * @param str string to spit out
      */
-    public TextToSpeech getEngine() {
-        return engine;
+    public void speak(String str) {
+        queue += str;
+        if (engine.speak(queue, TextToSpeech.QUEUE_ADD, null) == TextToSpeech.SUCCESS) {
+            queue = "";
+        }
+    }
+
+    /**
+     * Free resources
+     *
+     */
+    public void clean() {
+        queue="";
+        if (engine == null) return;
+        engine.shutdown();
     }
 }

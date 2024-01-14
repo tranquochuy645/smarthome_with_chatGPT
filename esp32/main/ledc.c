@@ -5,7 +5,6 @@
 #include "esp_log.h"
 #include <string.h>
 
-
 esp_err_t ledc_init()
 {
 	ledc_timer_config_t ledc_timer = {
@@ -45,23 +44,31 @@ esp_err_t ledc_init()
 	return ESP_OK;
 }
 
-
 uint32_t hex_color_to_uint32(char *hexColor)
 {
-	 if (hexColor == NULL || hexColor[0] != '0' || hexColor[1] != 'x')
-    {
-        return 0; // Invalid hex color format, return an appropriate error code
-    }
+	if (hexColor == NULL || hexColor[0] != '0' || hexColor[1] != 'x')
+	{
+		return 0; // Invalid hex color format, return an appropriate error code
+	}
 
-    uint32_t color = (uint32_t)strtol(hexColor, NULL, 16);
+	// Convert hexColor to lowercase
+	for (int i = 2; i < 9; i++)
+	{
+		if (hexColor[i] >= 'A' && hexColor[i] <= 'Z')
+		{
+			hexColor[i] |= 32; // Convert to lowercase using bitwise OR with 32
+		}
+	}
 
-    // Ensure that the color value is within the valid range
-    if (color > 0xFFFFFF)
-    {
-        return 0; // Invalid color value, return an appropriate error code
-    }
+	uint32_t color = (uint32_t)strtol(hexColor, NULL, 16);
 
-    return color;
+	// Ensure that the color value is within the valid range
+	if (color > 0xFFFFFF)
+	{
+		return 0; // Invalid color value, return an appropriate error code
+	}
+
+	return color;
 }
 void ledc_set_color(uint32_t color)
 {

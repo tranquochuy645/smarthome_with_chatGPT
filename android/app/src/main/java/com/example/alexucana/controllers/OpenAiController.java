@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.example.alexucana.config;
+import com.example.alexucana.fragments.alex.AlexFragment;
 import com.example.alexucana.utils.SseHandler;
 
 import org.json.JSONArray;
@@ -67,13 +68,14 @@ public class OpenAiController {
      * @param fn_1       The content chunk handler for server-sent events.
      * @param jsonLoader The JSON loader for loading data.
      */
-    public OpenAiController(SseHandler.OnContentChunkHandler fn_1, JsonLoader jsonLoader) {
+    public OpenAiController(SseHandler.OnContentChunkHandler fn_1,  JsonLoader jsonLoader) {
         msgLog = new JSONArray();
         functionsAsset = new JSONArray();
         dbController = DataManager.getInstance();
 
         onContentChunk = (content) -> {
             fn_1.apply(content);
+            if(content==null) return;
             lastResponse += content;
         };
 

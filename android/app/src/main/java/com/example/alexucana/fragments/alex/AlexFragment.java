@@ -1,17 +1,15 @@
 /**
  * AlexFragment: Fragment for interacting with an AI (Alex) using OpenAI API and TextToSpeech (TTS).
- *
+ * <p>
  * This fragment is responsible for managing the interaction with an AI named Alex using the OpenAI API
  * for natural language processing. It also utilizes TextToSpeech (TTS) for audio responses. The class
  * initializes the OpenAiController and TtsController, and provides methods to ask questions to Alex,
  * handle TTS cleanup on fragment destruction, and manage the UI responses.
- *
  */
 package com.example.alexucana.fragments.alex;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +37,7 @@ public class AlexFragment extends Fragment {
     private final OpenAiController openAi;
 
     // TextToSpeech engine for audio responses
-    private TextToSpeech ttsEngine;
+    private final TtsController tts;
 
     // String to store the full answer
     private String fullAns = "";
@@ -64,6 +62,7 @@ public class AlexFragment extends Fragment {
     public AlexFragment(Activity p) {
         parent = p;
         openAi = new OpenAiController(this::appendWordToAnswer, this::loadJson);
+        tts = new TtsController(p.getApplicationContext());
     }
 
     /**
@@ -78,7 +77,6 @@ public class AlexFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.chat_box, container, false);
         tv_response = view.findViewById(R.id.tv_response);
-        ttsEngine = new TtsController(getContext()).getEngine();
         return view;
     }
 
@@ -88,10 +86,7 @@ public class AlexFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (ttsEngine != null) {
-            ttsEngine.speak("", TextToSpeech.QUEUE_FLUSH, null); // Flush the queue
-            ttsEngine.stop();
-        }
+        tts.clean();
     }
 
     /**
@@ -101,20 +96,9 @@ public class AlexFragment extends Fragment {
      */
     public void askAlex(String question) {
         fullAns = "";
+        sentenceCache = "";
+        tts.createEngine();
         openAi.callOpenAiApi(question);
-    }
-
-    /**
-     * Add a word to the TextToSpeech speaking queue.
-     *
-     * @param word The word to add to the speaking queue.
-     */
-    private void addToSpeakingQueue(String word) {
-        if (ttsEngine != null) {
-            ttsEngine.speak(word, TextToSpeech.QUEUE_ADD, null);
-        } else {
-            ttsEngine = new TtsController(getContext()).getEngine();
-        }
     }
 
     /**
@@ -123,8 +107,14 @@ public class AlexFragment extends Fragment {
      * @param w The word to append.
      */
     private void appendWordToAnswer(String w) {
+        if (w == null) { // End of stream
+            if (sentenceCache.isEmpty()) return;
+            tts.speak(sentenceCache);
+            sentenceCache = "";
+            return;
+        }
         if (specialCharacters.contains(w)) {
-            addToSpeakingQueue(sentenceCache);
+            tts.speak(sentenceCache);
             sentenceCache = "";
         } else {
             sentenceCache += w;
@@ -134,6 +124,7 @@ public class AlexFragment extends Fragment {
             tv_response.setText(fullAns);
         });
     }
+
 
     /**
      * Load a JSON file from the assets folder.

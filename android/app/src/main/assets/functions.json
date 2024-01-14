@@ -1,7 +1,7 @@
 [
   {
     "name": "set_device_data",
-    "description": "Set user's devices data, the devices will automatically sync with new data value. You can control user's devices by calling this function. You can only control the field that is named 'controllable'. You cannot control sensors.",
+    "description": "Set user's devices data, the devices will automatically sync with new data value. You can control user's devices by calling this function. You can only control the field that is named 'controllable'. You cannot control sensors. You cannot control devices that doesn't exist in current data, or in a room that it doesn't belong to.",
     "parameters": {
       "type": "object",
       "properties": {

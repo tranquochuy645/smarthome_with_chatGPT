@@ -2,7 +2,6 @@
 #include "ledc.h"
 #include "esp_log.h"
 #include "esp_system.h"
-
 // Function: read the chunk buffer from firebase and decide what to do with it
 void controllable_event_handler(const char *buffer)
 {
@@ -21,12 +20,9 @@ void controllable_event_handler(const char *buffer)
             if (quotePos != NULL)
             {
                 *quotePos = '\0'; // Null-terminate the string at the quote position
-
                 // TODO: Now local_cache contains the hex color string
-                char *hexColor = local_cache;
-                // You can use hexColor for further processing or logging
-                ESP_LOGI("controllable_event_handler", "Received hex color: %s", hexColor);
-                ledc_set_color(hex_color_to_uint32(hexColor));
+                ESP_LOGI("controllable_event_handler", "Received hex color: %s", local_cache);
+                ledc_set_color(hex_color_to_uint32(local_cache));
             }
             else
             {

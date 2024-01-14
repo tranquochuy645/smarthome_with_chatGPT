@@ -8,7 +8,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/build/config",
-                "/home/huy/esp/esp-idf/components/**"
+                "/home/huy/esp/esp-idf/components/**",
+                "/home/huy/esp/esp-idf/components/spi_flash/sim/stubs/esp_timer/include"
             ],
             "browse": {
                 "path": [

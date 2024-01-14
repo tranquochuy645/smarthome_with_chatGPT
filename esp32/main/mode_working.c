@@ -43,11 +43,11 @@ static void run_when_wifi_connected_task(void *parm)
         if (esp_http_client_get_status_code(client) == 401)
         {
             // permission denied -> user has deleted this device
-            esp_http_client_cleanup(client);
             interrupt_hard_reset();
         }
         else
         {
+            esp_http_client_close(client);
             esp_http_client_cleanup(client);
         }
     }
@@ -84,23 +84,41 @@ static void rtdb_listening_task(void *parm)
             else
             {
                 int data_len = esp_http_client_read_response(client, output_buffer, 128);
-                if (esp_http_client_get_status_code(client) == 200)
+                int status_code = esp_http_client_get_status_code(client);
+                if (status_code == 200)
                 {
+
+                    // IMPORTANT
+                    // The initial timeout is by default 5000ms, when opening a new connection, 5000ms is good enough
+                    // But esp_http_client_read_response only returns when the connection is timeout, or full response is available
+                    // Since we are handling SSE, where the chunks are coming forever, the workaround to reduce latency is setting timeout to a lower value (e.g. 500ms) AFTER the first response chunk (connection opened successfully)
+                    esp_http_client_set_timeout_ms(client, 500); // set timeout to 500ms
+
                     controllable_event_handler(output_buffer);
                     memset(output_buffer, 0, sizeof(output_buffer));
                     ESP_LOGI(TAG_WORKER, "SSE handler ready");
-
                     while (esp_http_client_is_chunked_response(client)) // infinite thread blocking
                     {
-                        vTaskDelay(100);
                         data_len = esp_http_client_read_response(client, output_buffer, 129);
-                        if (data_len == 0 || data_len == 30)
+                        if (data_len == 0)
+                        {
                             // data_len == 0 means no chunk
-                            // data_len of keep-alive event length is always 30
                             continue;
+                        }
+                        if (data_len == 30)
+                        {
+                            // data_len of keep-alive event length is always 30
+                            memset(output_buffer, 0, sizeof(output_buffer)); // Clear the buffer
+                            continue;
+                        }
                         controllable_event_handler(output_buffer);
                         memset(output_buffer, 0, sizeof(output_buffer)); // Clear the buffer
                     }
+                }
+                else if (status_code == 404)
+                {
+                    // not found -> user has deleted this device
+                    interrupt_hard_reset();
                 }
                 else
                 {
@@ -108,6 +126,7 @@ static void rtdb_listening_task(void *parm)
                 }
             }
         }
+        esp_http_client_close(client);
         esp_http_client_cleanup(client);
         ESP_LOGI(TAG_WORKER, "HTTP connection closed");
         vTaskDelay(1000);
@@ -130,9 +149,17 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
         {
             vTaskDelete(main_loop);
         }
-        // xEventGroupClearBits(s_wifi_event_group, CONNECTED_BIT);
-        ESP_LOGI(TAG_INIT, "WiFi disconnected, reconnecting...");
-        ESP_ERROR_CHECK(esp_wifi_connect());
+        wifi_event_sta_disconnected_t *event = (wifi_event_sta_disconnected_t *)event_data;
+        if (WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT == event->reason || WIFI_REASON_AUTH_FAIL == event->reason)
+        {
+            // wrong wifi credentials
+            interrupt_hard_reset();
+        }
+        else
+        {
+            ESP_LOGI(TAG_INIT, "WiFi disconnected, reconnecting...");
+            esp_wifi_connect();
+        }
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
@@ -142,7 +169,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
         {
             // Very important to reduce latency of realtime data update
             // set priority high e.g: configMAX_PRIORITIES - 1 (~24)
-            xTaskCreate(&rtdb_listening_task, "rtdb_listening_task", 4096, NULL, configMAX_PRIORITIES - 1, &rtdb_listener);
+            xTaskCreate(&rtdb_listening_task, "rtdb_listening_task", 4096, NULL, 24, &rtdb_listener);
         }
         if (main_loop == NULL) // safety check
         {
@@ -172,5 +199,5 @@ void init_working_mode()
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_ERROR_CHECK(esp_wifi_disconnect());
-    ESP_ERROR_CHECK(esp_wifi_connect());
+    esp_wifi_connect();
 }

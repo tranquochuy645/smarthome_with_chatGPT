@@ -110,6 +110,9 @@ public class SseHandler extends EventSourceListener {
                 functionArgumentsCache = "";
                 functionNameCache = "";
                 return;
+            }else if(finishReason.equals("stop")){
+                contentChunkHandler.apply(null);
+                return;
             }
 
             // If the finish reason is not a function call, proceed to process content or potential function call
