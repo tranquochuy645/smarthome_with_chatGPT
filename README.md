@@ -4,9 +4,7 @@
 
 ## Demo video
 
-<video width="100%" controls>
-  <source src="https://tranquochuy645.github.io/assets/videos/ChatGPT_smart_home_project/demo_video.mp4" type="video/mp4">
-</video>
+https://tranquochuy645.github.io/assets/videos/ChatGPT_smart_home_project/demo_video.mp4
 
 ## UI
 
