@@ -2,9 +2,15 @@
 ## Used stacks
 <img style="background-color:white;padding:15px" src="./img/overview.png"></img>
 
-## Demo video
+## Demo
+[Video (Vietnamese)](https://tranquochuy645.github.io/assets/videos/ChatGPT_smart_home_project/demo_video.mp4)
 
-[link](https://tranquochuy645.github.io/assets/videos/ChatGPT_smart_home_project/demo_video.mp4)
+App UI
+
+<img style="height:300px; width:150px;" src="./img/result1.png"></img>
+<img style="height:300px; width:150px;"  src="./img/result2.png"></img>
+<img style="height:300px; width:150px;"  src="./img/result3.png"></img>
+<img style="height:300px; width:150px;"  src="./img/result4.png"></img>
 
 ## To try it yourself
 
