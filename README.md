@@ -4,6 +4,7 @@
 
 ## Demo video
 
+
 https://tranquochuy645.github.io/assets/videos/ChatGPT_smart_home_project/demo_video.mp4
 
 ## UI
