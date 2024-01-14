@@ -20,5 +20,5 @@ You will need an OpenAI API key and create a Firebase Realtime Database to run t
 
 -  In the "./android/app/src/main/java/com/example/alexucana" directory, rename example_config.java to config.java and add your API key. You may also change other configurations as you wish.
 
--  In "./esp32/main/project_config.h," replace the database URL with yours.
+-  In "./esp32/main/project_config.h", replace the database URL with yours.
 
